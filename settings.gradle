@@ -1,0 +1,3 @@
+rootProject.name = "balls-of-steel"
+
+include "fixed-point", "geometry", "physics"

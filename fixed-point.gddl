@@ -1,0 +1,128 @@
+{
+	moduleName = "fixed-point",
+	packageName = "fixie",
+	numbers = [
+		{
+			className = "FixDisplacement",
+			internalType = "Int",
+			oneValue = 1e5,
+			checkOverflow = true
+		},
+		{
+			className = "FixDensity",
+			internalType = "UShort",
+			oneValue = 1000,
+			checkOverflow = true
+		}
+	],
+	accelerations = [{
+		className = "Acceleration",
+		floatType = "Float",
+		speed = "Speed",
+		createNumberExtensions = true
+	}],
+	angles = [{
+		className = "Angle",
+		intType = "Int",
+		displayUnit = "Degrees",
+		createNumberExtensions = true,
+		allowDivisionAndFloatMultiplication = false,
+		allowComparisons = false,
+		spin = "Spin"
+	}],
+	angularAccelerations = [{
+		className = "AngularAcceleration",
+		floatType = "Double",
+		spin = "Spin",
+		createNumberExtensions = true
+	}],
+	densities = [{
+		className = "Density",
+		number = "FixDensity",
+		volume = "Volume",
+		mass = "Mass",
+		createNumberExtensions = true
+	}],
+	masses = [{
+		className = "Mass",
+		floatType = "Double",
+		displayUnit = "Kilogram",
+		volume = "Volume",
+		density = "Density",
+		speed = "Speed",
+		momentum = "Momentum",
+		createNumberExtensions = true
+	}],
+	momenta = [{
+		className = "Momentum",
+		floatType = "Double",
+		square = "SquareMomentum",
+		mass = "Mass",
+		speed = "Speed",
+		createNumberExtensions = true
+	}],
+	squareMomenta = [{
+		className = "SquareMomentum",
+		floatType = "Double",
+		momentum = "Momentum",
+		createNumberExtensions = true
+	}],
+	volumes = [{
+		className = "Volume",
+		floatType = "Double",
+		displayUnit = "Liter",
+		displacement = "Displacement",
+		area = "Area",
+		density = "Density",
+		mass = "Mass",
+		createNumberExtensions = true
+	}],
+	areas = [{
+		className = "Area",
+		floatType = "Double",
+		displayUnit = "Square meter",
+		displacement = "Displacement",
+		volume = "Volume",
+		createNumberExtensions = true
+	}]
+	displacements = [{
+		className = "Displacement",
+		number = "FixDisplacement",
+		oneUnit = "Meter",
+		displayUnit = "Meter",
+		speed = "Speed",
+		area = "Area",
+		volume = "Volume",
+		createNumberExtensions = true
+	}],
+	speed = [{
+		className = "Speed",
+		floatType = "Float",
+		oneUnit = "Meters per second",
+		displayUnit = "Meters per second",
+		square = "SquareSpeed",
+		displacement = "Displacement",
+		acceleration = "Acceleration",
+		spin = "Spin",
+		mass = "Mass",
+		momentum = "Momentum",
+		createNumberExtensions = true
+	}],
+	squareSpeed = [{
+		className = "SquareSpeed",
+		floatType = "Double",
+		speed = "Speed",
+		createNumberExtensions = true
+	}],
+	spins = [{
+		className = "Spin",
+		floatType = "Float",
+		oneUnit = "Degrees per second",
+		displayUnit = "Degrees per second",
+		angle = "Angle",
+		speed = "Speed",
+		displacement = "Displacement",
+		acceleration = "AngularAcceleration",
+		createNumberExtensions = true
+	}]
+}
