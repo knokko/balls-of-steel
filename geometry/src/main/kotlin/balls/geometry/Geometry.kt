@@ -1,7 +1,6 @@
 package balls.geometry
 
-import fixie.Displacement
-import fixie.times
+import fixie.*
 import kotlin.math.max
 import kotlin.math.min
 
@@ -41,5 +40,29 @@ object Geometry {
 	): Displacement {
 		findClosestPointOnRectangleToPoint(plane, point, outPointOnPlane)
 		return point.distance(outPointOnPlane)
+	}
+
+	internal fun findIntersectionBetweenLineSegmentAndPlane(
+		plane: Rectangle, lineStart: Position, lineEnd: Position, outIntersection: Position
+	): Boolean {
+		val normalX = plane.lengthY1 * plane.lengthZ2 - plane.lengthZ1 * plane.lengthY2
+		val normalY = plane.lengthZ1 * plane.lengthX2 - plane.lengthX1 * plane.lengthZ2
+		val normalZ = plane.lengthX1 * plane.lengthY2 - plane.lengthY1 * plane.lengthX2
+
+		val dotStart = (lineStart.x - plane.startX) * normalX +
+				(lineStart.y - plane.startY) * normalY + (lineStart.z - plane.startZ) * normalZ
+		val dotEnd = (lineEnd.x - plane.startX) * normalX +
+				(lineEnd.y - plane.startY) * normalY + (lineEnd.z - plane.startZ) * normalZ
+
+		if ((dotStart.value >= 0.0 && dotEnd.value >= 0.0) || (dotStart.value <= 0.0 && dotEnd.value <= 0.0)) return false
+
+		val progress = dotStart / (dotStart - dotEnd)
+		if (progress <= 0.0 || progress >= 1.0) return false
+
+		outIntersection.x = lineStart.x + progress * (lineEnd.x - lineStart.x)
+		outIntersection.y = lineStart.y + progress * (lineEnd.y - lineStart.y)
+		outIntersection.z = lineStart.z + progress * (lineEnd.z - lineStart.z)
+
+		return true
 	}
 }

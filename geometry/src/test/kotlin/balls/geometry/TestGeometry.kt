@@ -1,8 +1,8 @@
 package balls.geometry
 
 import fixie.*
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.assertEquals
 
 class TestGeometry {
 
@@ -123,5 +123,47 @@ class TestGeometry {
 		assertEquals(2.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(1.5.m, 1.m, 5.m), dummy))
 		assertEquals(2.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(2.m, -3.m, 1.m), dummy))
 		assertEquals(5.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(2.m, -7.m, 0.m), dummy))
+	}
+
+	private fun checkIntersection(plane: Rectangle, lineStart: Position, lineEnd: Position, expected: Position?) {
+		val actual = Position.origin()
+		val intersected = Geometry.findIntersectionBetweenLineSegmentAndPlane(plane, lineStart, lineEnd, actual)
+		if (expected != null) {
+			assertTrue(intersected)
+			assertEquals(expected, actual, 1.mm)
+		} else assertFalse(intersected)
+	}
+
+	@Test
+	fun testIntersectionBetweenLineSegmentAndPlane() {
+		val plane1 = Rectangle(
+			startX = 0.m, startY = 0.m, startZ = 0.m,
+			lengthX1 = 3.m, lengthY1 = 0.m, lengthZ1 = 0.m,
+			lengthX2 = 0.m, lengthY2 = 0.m, lengthZ2 = 1.m
+		)
+
+		// Parallel/overlapping lines don't intersect
+		for (y in arrayOf(-5.m, 0.m, 1.m, 5.m)) {
+			checkIntersection(plane1, Position(3.m, y, 5.m), Position(10.m, y, 6.m), null)
+		}
+
+		// The line is orthogonal to the plane
+		checkIntersection(plane1, Position(-2.m, -5.m, -1.m), Position(1.m, 10.m, -7.m), Position(-1.m, 0.m, -3.m))
+		checkIntersection(plane1, Position(-2.m, 5.m, -1.m), Position(1.m, -10.m, -7.m), Position(-1.m, 0.m, -3.m))
+
+		// The line is orthogonal (and therefor intersects the plane), but the line SEGMENT does not
+		checkIntersection(plane1, Position(-2.m, 5.m, -1.m), Position(1.m, 10.m, -7.m), null)
+		checkIntersection(plane1, Position(-2.m, 10.m, -1.m), Position(1.m, 5.m, -7.m), null)
+		checkIntersection(plane1, Position(-2.m, -5.m, -1.m), Position(1.m, -10.m, -7.m), null)
+		checkIntersection(plane1, Position(-2.m, -10.m, -1.m), Position(1.m, -5.m, -7.m), null)
+
+		val plane2 = Rectangle(
+			startX = 1.m, startY = 2.m, startZ = 3.m,
+			lengthX1 = 0.m, lengthY1 = -5.m, lengthZ1 = 0.m,
+			lengthX2 = 1.m, lengthY2 = 0.m, lengthZ2 = 0.m
+		)
+
+		checkIntersection(plane2, Position(12.m, 34.m, -7.m), Position(12.m, 39.m, 43.m), Position(12.m, 35.m, 3.m))
+		checkIntersection(plane2, Position(12.m, 34.m, -7.m), Position(12.m, 39.m, 2.9.m), null)
 	}
 }
