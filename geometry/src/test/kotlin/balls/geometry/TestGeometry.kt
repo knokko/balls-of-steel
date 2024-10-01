@@ -27,7 +27,7 @@ class TestGeometry {
 		for (y in arrayOf(-2.5.m, -0.3.m, 0.m, 0.01.m, 1.m, 1.5.m)) {
 			assertEquals(
 				0.3, 0.4, Geometry.solveClosestPointOnPlaneToPoint(
-					PlaneSegment(
+					Rectangle(
 						startX = 0.m, startY = 0.m, startZ = 0.m,
 						lengthX1 = 1.m, lengthY1 = 0.m, lengthZ1 = 0.m,
 						lengthX2 = 0.m, lengthY2 = 0.m, lengthZ2 = 1.m
@@ -36,7 +36,7 @@ class TestGeometry {
 			)
 			assertEquals(
 				0.6, 0.4, Geometry.solveClosestPointOnPlaneToPoint(
-					PlaneSegment(
+					Rectangle(
 						startX = 0.m, startY = 3.m, startZ = 0.m,
 						lengthX1 = 500.mm, lengthY1 = 0.m, lengthZ1 = 0.m,
 						lengthX2 = 0.m, lengthY2 = 0.m, lengthZ2 = 1.m
@@ -45,7 +45,7 @@ class TestGeometry {
 			)
 			assertEquals(
 				0.6, -2.6, Geometry.solveClosestPointOnPlaneToPoint(
-					PlaneSegment(
+					Rectangle(
 						startX = 0.m, startY = -3.m, startZ = 3.m,
 						lengthX1 = 500.mm, lengthY1 = 0.m, lengthZ1 = 0.m,
 						lengthX2 = 0.m, lengthY2 = 0.m, lengthZ2 = 1.m
@@ -54,7 +54,7 @@ class TestGeometry {
 			)
 			assertEquals(
 				0.3, 1.5, Geometry.solveClosestPointOnPlaneToPoint(
-					PlaneSegment(
+					Rectangle(
 						startX = 0.m, startY = -3.m, startZ = 0.m,
 						lengthX1 = 5.m, lengthY1 = 0.m, lengthZ1 = -5.m,
 						lengthX2 = 1.m, lengthY2 = 0.m, lengthZ2 = 1.m
@@ -65,7 +65,7 @@ class TestGeometry {
 
 		assertEquals(
 			2.0, -2.0, Geometry.solveClosestPointOnPlaneToPoint(
-				PlaneSegment(
+				Rectangle(
 					startX = 0.m, startY = 15.m, startZ = 0.m,
 					lengthX1 = 5.m, lengthY1 = 0.m, lengthZ1 = 0.m,
 					lengthX2 = 0.m, lengthY2 = 3.m, lengthZ2 = 0.m
@@ -74,7 +74,7 @@ class TestGeometry {
 		)
 		assertEquals(
 			4.0, -2.0, Geometry.solveClosestPointOnPlaneToPoint(
-				PlaneSegment(
+				Rectangle(
 					startX = 0.m, startY = 15.m, startZ = 0.m,
 					lengthX1 = 0.m, lengthY1 = 0.m, lengthZ1 = 2.m,
 					lengthX2 = 0.m, lengthY2 = 3.m, lengthZ2 = 0.m
@@ -83,15 +83,15 @@ class TestGeometry {
 		)
 	}
 
-	private fun checkClosest(expected: Position, plane: PlaneSegment, point: Position) {
+	private fun checkClosest(expected: Position, plane: Rectangle, point: Position) {
 		val actual = Position.origin()
-		Geometry.findClosestPointOnPlaneSegmentToPoint(plane, point, actual)
+		Geometry.findClosestPointOnRectangleToPoint(plane, point, actual)
 		assertEquals(expected, actual, 1.mm)
 	}
 
 	@Test
-	fun testFindClosestPointOnPlaneSegmentToPoint() {
-		val plane1 = PlaneSegment(
+	fun testFindClosestPointOnRectangleToPoint() {
+		val plane1 = Rectangle(
 			startX = 0.m, startY = 0.m, startZ = 0.m,
 			lengthX1 = 3.m, lengthY1 = 0.m, lengthZ1 = 0.m,
 			lengthX2 = 0.m, lengthY2 = 0.m, lengthZ2 = 1.m
@@ -101,7 +101,7 @@ class TestGeometry {
 		checkClosest(Position(2.m, 0.m, 1.m), plane1, Position(2.m, -5.m, 15.m))
 		checkClosest(Position(3.m, 0.m, 1.m), plane1, Position(10.m, 10.m, 10.m))
 
-		val plane2 = PlaneSegment(
+		val plane2 = Rectangle(
 			startX = 1.m, startY = 2.m, startZ = 3.m,
 			lengthX1 = 0.m, lengthY1 = -5.m, lengthZ1 = 0.m,
 			lengthX2 = 1.m, lengthY2 = 0.m, lengthZ2 = 0.m
@@ -111,17 +111,17 @@ class TestGeometry {
 	}
 
 	@Test
-	fun testDistanceBetweenPointAndPlaneSegment() {
-		val plane = PlaneSegment(
+	fun testDistanceBetweenPointAndRectangle() {
+		val plane = Rectangle(
 			startX = 1.m, startY = 2.m, startZ = 3.m,
 			lengthX1 = 0.m, lengthY1 = -5.m, lengthZ1 = 0.m,
 			lengthX2 = 1.m, lengthY2 = 0.m, lengthZ2 = 0.m
 		)
 
 		val dummy = Position.origin()
-		assertEquals(0.m, Geometry.distanceBetweenPointAndPlaneSegment(plane, Position(1.5.m, 1.m, 3.m), dummy))
-		assertEquals(2.m, Geometry.distanceBetweenPointAndPlaneSegment(plane, Position(1.5.m, 1.m, 5.m), dummy))
-		assertEquals(2.m, Geometry.distanceBetweenPointAndPlaneSegment(plane, Position(2.m, -3.m, 1.m), dummy))
-		assertEquals(5.m, Geometry.distanceBetweenPointAndPlaneSegment(plane, Position(2.m, -7.m, 0.m), dummy))
+		assertEquals(0.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(1.5.m, 1.m, 3.m), dummy))
+		assertEquals(2.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(1.5.m, 1.m, 5.m), dummy))
+		assertEquals(2.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(2.m, -3.m, 1.m), dummy))
+		assertEquals(5.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(2.m, -7.m, 0.m), dummy))
 	}
 }

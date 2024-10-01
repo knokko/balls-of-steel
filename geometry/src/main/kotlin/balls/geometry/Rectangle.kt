@@ -2,7 +2,7 @@ package balls.geometry
 
 import fixie.*
 
-class PlaneSegment(
+class Rectangle(
 	val startX: Displacement,
 	val startY: Displacement,
 	val startZ: Displacement,

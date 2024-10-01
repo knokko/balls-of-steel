@@ -7,7 +7,7 @@ import kotlin.math.min
 
 object Geometry {
 
-	internal fun solveClosestPointOnPlaneToPoint(plane: PlaneSegment, point: Position): Pair<Double, Double> {
+	internal fun solveClosestPointOnPlaneToPoint(plane: Rectangle, point: Position): Pair<Double, Double> {
 		val rx = point.x - plane.startX
 		val ry = point.y - plane.startY
 		val rz = point.z - plane.startZ
@@ -26,7 +26,7 @@ object Geometry {
 		return Pair(a, b)
 	}
 
-	internal fun findClosestPointOnPlaneSegmentToPoint(plane: PlaneSegment, point: Position, outPointOnPlane: Position) {
+	internal fun findClosestPointOnRectangleToPoint(plane: Rectangle, point: Position, outPointOnPlane: Position) {
 		var (a, b) = solveClosestPointOnPlaneToPoint(plane, point)
 		a = max(0.0, min(1.0, a))
 		b = max(0.0, min(1.0, b))
@@ -36,10 +36,10 @@ object Geometry {
 		outPointOnPlane.z = plane.startZ + a * plane.lengthZ1 + b * plane.lengthZ2
 	}
 
-	internal fun distanceBetweenPointAndPlaneSegment(
-		plane: PlaneSegment, point: Position, outPointOnPlane: Position
+	internal fun distanceBetweenPointAndRectangle(
+		plane: Rectangle, point: Position, outPointOnPlane: Position
 	): Displacement {
-		findClosestPointOnPlaneSegmentToPoint(plane, point, outPointOnPlane)
+		findClosestPointOnRectangleToPoint(plane, point, outPointOnPlane)
 		return point.distance(outPointOnPlane)
 	}
 }
