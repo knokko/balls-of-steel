@@ -42,6 +42,21 @@ object Geometry {
 		return point.distance(outPointOnPlane)
 	}
 
+	internal fun distanceBetweenPointAndLineSegment(
+		lineStart: Position, lineEnd: Position, point: Position, outPointOnLineSegment: Position
+	): Displacement {
+		val dot = (lineEnd.x - lineStart.x) * (point.x - lineStart.x) +
+				(lineEnd.y - lineStart.y) * (point.y - lineStart.y) +
+				(lineEnd.z - lineStart.z) * (point.z - lineStart.z)
+
+		val progress = max(0.0, min(1.0, dot / Position.distanceSquared(lineStart, lineEnd)))
+		outPointOnLineSegment.x = lineStart.x + progress * (lineEnd.x - lineStart.x)
+		outPointOnLineSegment.y = lineStart.y + progress * (lineEnd.y - lineStart.y)
+		outPointOnLineSegment.z = lineStart.z + progress * (lineEnd.z - lineStart.z)
+
+		return point.distance(outPointOnLineSegment)
+	}
+
 	internal fun findIntersectionBetweenLineSegmentAndPlane(
 		plane: Rectangle, lineStart: Position, lineEnd: Position, outIntersection: Position
 	): Boolean {

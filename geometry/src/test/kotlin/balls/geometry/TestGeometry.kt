@@ -125,6 +125,29 @@ class TestGeometry {
 		assertEquals(5.m, Geometry.distanceBetweenPointAndRectangle(plane, Position(2.m, -7.m, 0.m), dummy))
 	}
 
+	private fun checkDistance(lineStart: Position, lineEnd: Position, point: Position, expected: Position) {
+		val actual = Position.origin()
+		val distance = Geometry.distanceBetweenPointAndLineSegment(lineStart, lineEnd, point, actual)
+		assertEquals(expected, actual, 1.mm)
+		assertEquals(distance, point.distance(expected), 1.mm)
+	}
+
+	@Test
+	fun testDistanceBetweenPointAndLineSegment() {
+		// Simple cases where the closest point on the line segment is the closest point on the line
+		checkDistance(Position(1.m, 2.m, 3.m), Position(1.m, -8.m, 3.m), Position(10.m, -6.m, -2.km), Position(1.m, -6.m, 3.m))
+		checkDistance(Position(2.m, 3.m, 4.m), Position(10.m, 3.m, 4.m), Position(4.m, 6.m, 7.m), Position(4.m, 3.m, 4.m))
+
+		// The closest point on the line lies before the start of the line segment
+		checkDistance(Position(0.m, 5.m, 10.m), Position(50.m, 5.m, 10.m), Position(-2.m, -3.m, 4.m), Position(0.m, 5.m, 10.m))
+
+		// The closest point on the line lies after the end of the line segment
+		checkDistance(Position(10.m, 20.m, 30.m), Position(10.m, 20.m, 100.m), Position(3.m, 1.km, 105.m), Position(10.m, 20.m, 100.m))
+
+		// Last case, but the roles of start and end are reversed
+		checkDistance(Position(10.m, 20.m, 100.m), Position(10.m, 20.m, 30.m), Position(3.m, 1.km, 105.m), Position(10.m, 20.m, 100.m))
+	}
+
 	private fun checkIntersection(plane: Rectangle, lineStart: Position, lineEnd: Position, expected: Position?) {
 		val actual = Position.origin()
 		val intersected = Geometry.findIntersectionBetweenLineSegmentAndPlane(plane, lineStart, lineEnd, actual)

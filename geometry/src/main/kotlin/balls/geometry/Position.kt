@@ -23,6 +23,8 @@ class Position(
 
 		fun origin() = Position(0.m, 0.m, 0.m)
 
+		fun distanceSquared(p1: Position, p2: Position) = distanceSquared(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z)
+
 		fun distanceSquared(
 			x1: Displacement, y1: Displacement, z1: Displacement,
 			x2: Displacement, y2: Displacement, z2: Displacement
