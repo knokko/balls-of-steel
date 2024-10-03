@@ -7,6 +7,17 @@ class Position(
 	var y: Displacement,
 	var z: Displacement
 ) {
+
+	fun moveTo(destination: Position) {
+		moveTo(destination.x, destination.y, destination.z)
+	}
+
+	fun moveTo(newX: Displacement, newY: Displacement, newZ: Displacement) {
+		this.x = newX
+		this.y = newY
+		this.z = newZ
+	}
+
 	override fun toString() = "($x, $y, $z)"
 
 	override fun equals(other: Any?) = other is Position && this.x == other.x && this.y == other.y && this.z == other.z

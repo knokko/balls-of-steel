@@ -36,20 +36,24 @@ object Geometry {
 	}
 
 	internal fun distanceBetweenPointAndRectangle(
-		plane: Rectangle, point: Position, outPointOnPlane: Position
+		plane: Rectangle, point: Position, outPointOnRectangle: Position
 	): Displacement {
-		findClosestPointOnRectangleToPoint(plane, point, outPointOnPlane)
-		return point.distance(outPointOnPlane)
+		findClosestPointOnRectangleToPoint(plane, point, outPointOnRectangle)
+		return point.distance(outPointOnRectangle)
+	}
+
+	private fun solveClosestPointOnLineToPoint(lineStart: Position, lineEnd: Position, point: Position): Double {
+		val dot = (lineEnd.x - lineStart.x) * (point.x - lineStart.x) +
+				(lineEnd.y - lineStart.y) * (point.y - lineStart.y) +
+				(lineEnd.z - lineStart.z) * (point.z - lineStart.z)
+
+		return dot / Position.distanceSquared(lineStart, lineEnd)
 	}
 
 	internal fun distanceBetweenPointAndLineSegment(
 		lineStart: Position, lineEnd: Position, point: Position, outPointOnLineSegment: Position
 	): Displacement {
-		val dot = (lineEnd.x - lineStart.x) * (point.x - lineStart.x) +
-				(lineEnd.y - lineStart.y) * (point.y - lineStart.y) +
-				(lineEnd.z - lineStart.z) * (point.z - lineStart.z)
-
-		val progress = max(0.0, min(1.0, dot / Position.distanceSquared(lineStart, lineEnd)))
+		val progress = max(0.0, min(1.0, solveClosestPointOnLineToPoint(lineStart, lineEnd, point)))
 		outPointOnLineSegment.x = lineStart.x + progress * (lineEnd.x - lineStart.x)
 		outPointOnLineSegment.y = lineStart.y + progress * (lineEnd.y - lineStart.y)
 		outPointOnLineSegment.z = lineStart.z + progress * (lineEnd.z - lineStart.z)
@@ -79,5 +83,153 @@ object Geometry {
 		outIntersection.z = lineStart.z + progress * (lineEnd.z - lineStart.z)
 
 		return true
+	}
+
+	internal fun solveClosestPointOnLineSegmentToLineSegment(
+		start1: Position, end1: Position, start2: Position,
+		lengthX2: Displacement, lengthY2: Displacement, lengthZ2: Displacement,
+		outPoint1: Position, outPoint2: Position, fakeDistance: Displacement
+	): Displacement {
+		val crossX = (end1.y - start1.y) * lengthZ2 - (end1.z - start1.z) * lengthY2
+		val crossY = (end1.z - start1.z) * lengthX2 - (end1.x - start1.x) * lengthZ2
+		val crossZ = (end1.x - start1.x) * lengthY2 - (end1.y - start1.y) * lengthX2
+		val crossSquared = crossX.value * crossX.value + crossY.value * crossY.value + crossZ.value * crossZ.value
+
+		if (crossSquared < 1e-8) {
+			val a1 = solveClosestPointOnLineToPoint(start1, end1, start2)
+			if (a1 > 0.0 && a1 < 1.0) {
+				outPoint1.moveTo(
+					start1.x + a1 * (end1.x - start1.x),
+					start1.y + a1 * (end1.y - start1.y),
+					start1.z + a1 * (end1.z - start1.z)
+				)
+				outPoint2.moveTo(start2)
+				return outPoint1.distance(outPoint2)
+			}
+
+			outPoint2.moveTo(start2.x + lengthX2, start2.y + lengthY2, start2.z + lengthZ2)
+			val a2 = solveClosestPointOnLineToPoint(start1, end1, outPoint2)
+			if (a2 > 0.0 && a2 < 1.0) {
+				outPoint1.moveTo(
+					start1.x + a2 * (end1.x - start1.x),
+					start1.y + a2 * (end1.y - start1.y),
+					start1.z + a2 * (end1.z - start1.z)
+				)
+				return outPoint1.distance(outPoint2)
+			}
+
+			if ((a1 >= 1.0 && a2 >= 1.0) || (a1 <= 0.0 && a2 <= 0.0)) return fakeDistance
+
+			val b = solveClosestPointOnLineToPoint(start2, outPoint2, start1)
+			outPoint2.moveTo(start2.x + b * lengthX2, start2.y + b * lengthY2, start2.z + b * lengthZ2)
+			outPoint1.moveTo(start1)
+			return outPoint1.distance(outPoint2)
+		}
+
+		// TODO Hm... I need a SquareArea class...
+		val offsetX = (start2.x - start1.x).toDouble(DistanceUnit.METER)
+		val offsetY = (start2.y - start1.y).toDouble(DistanceUnit.METER)
+		val offsetZ = (start2.z - start1.z).toDouble(DistanceUnit.METER)
+
+		val crossX2 = (lengthY2 * crossZ - lengthZ2 * crossY).toDouble(VolumeUnit.CUBIC_METER)
+		val crossY2 = (lengthZ2 * crossX - lengthX2 * crossZ).toDouble(VolumeUnit.CUBIC_METER)
+		val crossZ2 = (lengthX2 * crossY - lengthY2 * crossX).toDouble(VolumeUnit.CUBIC_METER)
+
+		val a = (crossX2 * offsetX + crossY2 * offsetY + crossZ2 * offsetZ) / crossSquared
+		if (a <= 0.0 || a >= 1.0) return fakeDistance
+
+		val crossX1 = ((end1.y - start1.y) * crossZ - (end1.z - start1.z) * crossY).toDouble(VolumeUnit.CUBIC_METER)
+		val crossY1 = ((end1.z - start1.z) * crossX - (end1.x - start1.x) * crossZ).toDouble(VolumeUnit.CUBIC_METER)
+		val crossZ1 = ((end1.x - start1.x) * crossY - (end1.y - start1.y) * crossX).toDouble(VolumeUnit.CUBIC_METER)
+
+		val b = max(0.0, min(1.0, (crossX1 * offsetX + crossY1 * offsetY + crossZ1 * offsetZ) / crossSquared))
+
+		outPoint1.moveTo(
+			start1.x + a * (end1.x - start1.x),
+			start1.y + a * (end1.y - start1.y),
+			start1.z + a * (end1.z - start1.z)
+		)
+		outPoint2.moveTo(start2.x + b * lengthX2, start2.y + b * lengthY2, start2.z + b * lengthZ2)
+		return outPoint1.distance(outPoint2)
+	}
+
+	private fun checkEdge(
+		lineStart: Position, lineEnd: Position, outLine: Position, outRectangle: Position,
+		closestPointLine: Position, closestPointRectangle: Position, closestDistance: Displacement,
+		startX: Displacement, startY: Displacement, startZ: Displacement,
+		lengthX: Displacement, lengthY: Displacement, lengthZ: Displacement
+	): Displacement {
+		val distance = solveClosestPointOnLineSegmentToLineSegment(
+			lineStart, lineEnd, Position(startX, startY, startZ),
+			lengthX, lengthY, lengthZ,
+			outLine, outRectangle, closestDistance
+		)
+		if (distance < closestDistance) {
+			closestPointLine.moveTo(outLine)
+			closestPointRectangle.moveTo(outRectangle)
+			return distance
+		}
+		return closestDistance
+	}
+
+	internal fun distanceBetweenLineSegmentAndRectangle(
+		rectangle: Rectangle, lineStart: Position, lineEnd: Position,
+		outPointOnLineSegment: Position, outPointOnRectangle: Position
+	): Displacement {
+
+		val closestPointRectangle = Position.origin()
+		val closestPointLine = Position.origin()
+		var closestDistance = distanceBetweenPointAndRectangle(rectangle, lineStart, closestPointRectangle)
+		closestPointLine.moveTo(lineStart)
+
+		val endDistance = distanceBetweenPointAndRectangle(rectangle, lineEnd, outPointOnRectangle)
+		if (endDistance < closestDistance) {
+			closestDistance = endDistance
+			closestPointLine.moveTo(lineEnd)
+			closestPointRectangle.moveTo(outPointOnRectangle)
+		}
+
+		if (findIntersectionBetweenLineSegmentAndPlane(rectangle, lineStart, lineEnd, outPointOnLineSegment)) {
+			val intersectionDistance = distanceBetweenPointAndRectangle(rectangle, outPointOnLineSegment, outPointOnRectangle)
+			if (intersectionDistance < closestDistance) {
+				closestDistance = intersectionDistance
+				closestPointLine.moveTo(outPointOnLineSegment)
+				closestPointRectangle.moveTo(outPointOnRectangle)
+			}
+		}
+
+		closestDistance = checkEdge(
+			lineStart, lineEnd, outPointOnLineSegment, outPointOnRectangle,
+			closestPointLine, closestPointRectangle, closestDistance,
+			rectangle.startX, rectangle.startY, rectangle.startZ,
+			rectangle.lengthX1, rectangle.lengthY1, rectangle.lengthZ1
+		)
+		closestDistance = checkEdge(
+			lineStart, lineEnd, outPointOnLineSegment, outPointOnRectangle,
+			closestPointLine, closestPointRectangle, closestDistance,
+			rectangle.startX, rectangle.startY, rectangle.startZ,
+			rectangle.lengthX2, rectangle.lengthY2, rectangle.lengthZ2
+		)
+		closestDistance = checkEdge(
+			lineStart, lineEnd, outPointOnLineSegment, outPointOnRectangle,
+			closestPointLine, closestPointRectangle, closestDistance,
+			rectangle.startX + rectangle.lengthX1,
+			rectangle.startY + rectangle.lengthY1,
+			rectangle.startZ + rectangle.lengthZ1,
+			rectangle.lengthX2, rectangle.lengthY2, rectangle.lengthZ2
+		)
+		closestDistance = checkEdge(
+			lineStart, lineEnd, outPointOnLineSegment, outPointOnRectangle,
+			closestPointLine, closestPointRectangle, closestDistance,
+			rectangle.startX + rectangle.lengthX2,
+			rectangle.startY + rectangle.lengthY2,
+			rectangle.startZ + rectangle.lengthZ2,
+			rectangle.lengthX1, rectangle.lengthY1, rectangle.lengthZ1
+		)
+
+		outPointOnLineSegment.moveTo(closestPointLine)
+		outPointOnRectangle.moveTo(closestPointRectangle)
+
+		return closestDistance
 	}
 }
