@@ -232,4 +232,99 @@ object Geometry {
 
 		return closestDistance
 	}
+
+	const val SWEEP_RESULT_MISS = 0
+	const val SWEEP_RESULT_DIRTY = 1
+	const val SWEEP_RESULT_HIT = 2
+
+	fun sweepSphereToRectangle(
+		sx: Displacement, sy: Displacement, sz: Displacement, svx: Displacement, svy: Displacement, svz: Displacement,
+		sr: Displacement, rectangle: Rectangle, outSpherePosition: Position, outPointOnRectangle: Position
+	): Int {
+		val fullDistance = distanceBetweenLineSegmentAndRectangle(
+			rectangle, Position(sx, sy, sz), Position(sx + svx, sy + svy, sz + svz),
+			outSpherePosition, outPointOnRectangle
+		)
+
+		// When the distance is larger than the radius, there is no collision
+		if (fullDistance > sr + 1.mm) return SWEEP_RESULT_MISS
+
+		val totalMovement = sqrt(svx * svx + svy * svy + svz * svz)
+
+		// Sanity check to avoid potential endless loops
+		var largestSafeDistance = distanceBetweenPointAndRectangle(rectangle, Position(sx, sy, sz), outPointOnRectangle)
+		if (largestSafeDistance <= sr) {
+			throw IllegalArgumentException("sphere at ($sx, $sy, $sz) with radius $sr is already in $rectangle")
+		}
+
+		val idealDistance = distanceBetweenPointAndRectangle(
+			rectangle, Position(sx + svx, sy + svy, sz + svz), outPointOnRectangle
+		)
+
+		// Dirty trick
+		if (idealDistance > sr && fullDistance > sr - 0.1.mm) return SWEEP_RESULT_DIRTY
+
+		var useBinarySearch = false
+		var signumCounter = 0
+		var largestSafeMovement = 0.m
+
+		val dix = outSpherePosition.x - sx
+		val diy = outSpherePosition.y - sy
+		val diz = outSpherePosition.z - sz
+		var smallestUnsafeMovement = sqrt(dix * dix + diy * diy + diz * diz)
+		var smallestUnsafeDistance = fullDistance
+		var candidateMovement = smallestUnsafeMovement
+
+		while ((smallestUnsafeMovement - largestSafeMovement) > 0.1.mm && largestSafeDistance - sr > 0.1.mm) {
+			val movementFactor = candidateMovement / totalMovement
+			val newX = sx + movementFactor * svx
+			val newY = sy + movementFactor * svy
+			val newZ = sz + movementFactor * svz
+			val distance = distanceBetweenPointAndRectangle(rectangle, Position(newX, newY, newZ), outPointOnRectangle)
+
+			if (distance > sr) {
+				if (signumCounter == -1) useBinarySearch = true
+				signumCounter -= 1
+				if (largestSafeMovement < candidateMovement) {
+					largestSafeMovement = candidateMovement
+					largestSafeDistance = distance
+				}
+			} else {
+				if (signumCounter == 1) useBinarySearch = true
+				signumCounter += 1
+				if (smallestUnsafeMovement > candidateMovement) {
+					smallestUnsafeMovement = candidateMovement
+					smallestUnsafeDistance = distance
+				}
+			}
+
+			if (useBinarySearch) candidateMovement = (largestSafeMovement + smallestUnsafeMovement) / 2
+			else {
+				// Example:
+				// - radius = 100mm
+				// - largestSafeDistance = 150mm
+				// - largestSafeMovement = 600mm
+				// - smallestUnsafeDistance = 40mm
+				// - smallestUnsafeMovement = 800mm
+				//
+				// - distanceFactor = (150 - 100) / (150 - 40) = 50 / 110 = 0.45
+				// - candidateMovement = 600 + 0.45 * (800 - 600) = 600 + 0.45 * 200 = 690
+				var distanceFactor = (largestSafeDistance - sr) / (largestSafeDistance - smallestUnsafeDistance)
+
+				distanceFactor *= if (largestSafeDistance - sr > sr - smallestUnsafeDistance) 1.05 else 0.95
+				if (distanceFactor < 0) distanceFactor = 0.0
+				if (distanceFactor > 1) distanceFactor = 1.0
+				candidateMovement = largestSafeMovement + distanceFactor * (smallestUnsafeMovement - largestSafeMovement)
+			}
+		}
+
+		val movementFactor = largestSafeMovement / totalMovement
+		outSpherePosition.moveTo(
+			sx + movementFactor * svx,
+			sy + movementFactor * svy,
+			sz + movementFactor * svz
+		)
+		distanceBetweenPointAndRectangle(rectangle, outSpherePosition, outPointOnRectangle)
+		return SWEEP_RESULT_HIT
+	}
 }

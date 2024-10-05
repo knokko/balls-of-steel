@@ -440,4 +440,70 @@ class TestGeometry {
 			Position(6.m, 2.m, 7.m), Position(6.m, 2.m, 8.m)
 		)
 	}
+
+	private fun assertSweepMiss(rectangle: Rectangle, start: Position, end: Position, radius: Displacement) {
+		assertEquals(Geometry.SWEEP_RESULT_MISS, Geometry.sweepSphereToRectangle(
+			start.x, start.y, start.z, end.x - start.x, end.y - start.y, end.z - start.z,
+			radius, rectangle, Position.origin(), Position.origin()
+		))
+	}
+
+	private fun assertSweepHit(
+		rectangle: Rectangle, start: Position, end: Position, radius: Displacement,
+		expectedSpherePosition: Position, expectedRectanglePosition: Position
+	) {
+		val actualSpherePosition = Position.origin()
+		val actualRectanglePosition = Position.origin()
+		assertEquals(Geometry.SWEEP_RESULT_HIT, Geometry.sweepSphereToRectangle(
+			start.x, start.y, start.z, end.x - start.x, end.y - start.y, end.z - start.z,
+			radius, rectangle, actualSpherePosition, actualRectanglePosition
+		))
+		assertEquals(expectedSpherePosition, actualSpherePosition, 1.mm)
+		assertEquals(expectedRectanglePosition, actualRectanglePosition, 1.mm)
+	}
+
+	@Test
+	fun testSweepSphereToRectangle() {
+		val rectangle = Rectangle(
+			startX = 10.m, startY = 5.m, startZ = 10.m,
+			lengthX1 = 0.m, lengthY1 = 0.m, lengthZ1 = 10.m,
+			lengthX2 = 20.m, lengthY2 = 0.m, lengthZ2 = 0.m
+		)
+
+		// Sweep down to the middle of the rectangle
+		assertSweepMiss(rectangle, Position(15.m, 20.m, 15.m), Position(15.m, 10.m, 15.m), 1.m)
+		assertSweepMiss(rectangle, Position(15.m, 20.m, 19.m), Position(15.m, 6.1.m, 19.m), 1.m)
+		assertSweepHit(
+			rectangle, Position(15.m, 20.m, 15.m), Position(15.m, 5.9.m, 15.m), 1.m,
+			Position(15.m, 6.m, 15.m), Position(15.m, 5.m, 15.m)
+		)
+		assertSweepHit(
+			rectangle, Position(12.m, 20.m, 15.m), Position(12.m, -15.km, 15.m), 1.m,
+			Position(12.m, 6.m, 15.m), Position(12.m, 5.m, 15.m)
+		)
+
+		// Sweep up instead
+		assertSweepMiss(rectangle, Position(15.m, -20.m, 15.m), Position(15.m, 0.m, 15.m), 1.m)
+		assertSweepMiss(rectangle, Position(15.m, -20.m, 19.m), Position(15.m, 3.9.m, 19.m), 1.m)
+		assertSweepHit(
+			rectangle, Position(15.m, -20.m, 15.m), Position(15.m, 4.1.m, 15.m), 1.m,
+			Position(15.m, 4.m, 15.m), Position(15.m, 5.m, 15.m)
+		)
+		assertSweepHit(
+			rectangle, Position(12.m, -20.m, 15.m), Position(12.m, 15.km, 15.m), 1.m,
+			Position(12.m, 4.m, 15.m), Position(12.m, 5.m, 15.m)
+		)
+
+		// Approach the rectangle from the negative X direction
+		assertSweepMiss(rectangle, Position(0.m, 5.m, 10.m), Position(8.9.m, 5.m, 10.m), 1.m)
+		assertSweepHit(
+			rectangle, Position(0.m, 5.m, 10.m), Position(9.6.m, 5.m, 10.m), 410.mm,
+			Position(9.59.m, 5.m, 10.m), Position(10.m, 5.m, 10.m)
+		)
+		assertSweepMiss(rectangle, Position(0.m, 2.m, 10.m), Position(5.9.m, 2.m, 10.m), 5.m)
+		assertSweepHit(
+			rectangle, Position(0.m, 2.m, 10.m), Position(6.1.m, 2.m, 10.m), 5.m,
+			Position(6.m, 2.m, 10.m), Position(10.m, 5.m, 10.m)
+		)
+	}
 }
