@@ -35,10 +35,10 @@ object Geometry {
 		outPointOnPlane.z = plane.startZ + a * plane.lengthZ1 + b * plane.lengthZ2
 	}
 
-	internal fun distanceBetweenPointAndRectangle(
-		plane: Rectangle, point: Position, outPointOnRectangle: Position
+	fun distanceBetweenPointAndRectangle(
+		rectangle: Rectangle, point: Position, outPointOnRectangle: Position
 	): Displacement {
-		findClosestPointOnRectangleToPoint(plane, point, outPointOnRectangle)
+		findClosestPointOnRectangleToPoint(rectangle, point, outPointOnRectangle)
 		return point.distance(outPointOnRectangle)
 	}
 
