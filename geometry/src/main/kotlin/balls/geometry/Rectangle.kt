@@ -1,6 +1,7 @@
 package balls.geometry
 
 import fixie.*
+import kotlin.math.sqrt
 
 class Rectangle(
 	val startX: Displacement,
@@ -16,11 +17,14 @@ class Rectangle(
 
 	init {
 		val dotProduct = abs(lengthX1 * lengthX2 + lengthY1 * lengthY2 + lengthZ1 * lengthZ2)
-		val reference1 = lengthX1 * lengthX1 + lengthY1 * lengthY1 + lengthZ1 * lengthZ1
-		val reference2 = lengthX2 * lengthX2 + lengthY2 * lengthY2 + lengthZ2 * lengthZ2
+		val lengthSquared1 = lengthX1 * lengthX1 + lengthY1 * lengthY1 + lengthZ1 * lengthZ1
+		val lengthSquared2 = lengthX2 * lengthX2 + lengthY2 * lengthY2 + lengthZ2 * lengthZ2
 
-		if (dotProduct > 0.01 * min(reference1, reference2)) {
-			throw IllegalArgumentException("length1 must be perpendicular to length2")
+		// TODO I need SquareArea...
+		if (dotProduct.value > 0.01 * sqrt(lengthSquared1.value * lengthSquared2.value)) {
+			throw IllegalArgumentException(
+				"length1 ($lengthX1, $lengthY1, $lengthZ1) must be perpendicular to length2 ($lengthX2, $lengthY2, $lengthZ2)"
+			)
 		}
 	}
 
