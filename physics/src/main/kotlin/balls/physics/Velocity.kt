@@ -12,6 +12,12 @@ class Velocity(
 
 	fun length() = sqrt(x * x + y * y + z * z)
 
+	fun changeTo(other: Velocity) {
+		this.x = other.x
+		this.y = other.y
+		this.z = other.z
+	}
+
 	companion object {
 
 		fun zero() = Velocity(0.mps, 0.mps, 0.mps)
