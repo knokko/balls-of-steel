@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.gradle.internal.os.OperatingSystem
 
 plugins {
 	id "java"
@@ -37,6 +38,20 @@ allprojects {
 	test {
 		useJUnitPlatform()
 	}
+
+	project.ext.jomlVersion = "1.10.1"
+	project.ext.lwjglVersion = "3.3.4"
+	switch (OperatingSystem.current()) {
+		case OperatingSystem.LINUX:
+			project.ext.lwjglNatives = ["natives-linux", "natives-linux-arm32", "natives-linux-arm64"]
+			break
+		case OperatingSystem.WINDOWS:
+			project.ext.lwjglNatives = ["natives-windows", "natives-windows-x86", "natives-windows-arm64"]
+			break
+		case OperatingSystem.MAC_OS:
+			project.ext.lwjglNatives = ["natives-macos", "natives-macos-arm64"]
+			break
+	}
 }
 
 project(":physics") {
@@ -49,5 +64,27 @@ project(":physics") {
 project(":geometry") {
 	dependencies {
 		implementation project(":fixed-point")
+	}
+}
+
+project(":playground") {
+	dependencies {
+		implementation project(":physics")
+		implementation "com.github.knokko:vk-boiler:ba4a99b91b"
+		implementation "com.github.knokko.update-loop:implementation:v2.0.0"
+
+		implementation "org.joml:joml:${jomlVersion}"
+		implementation platform("org.lwjgl:lwjgl-bom:$lwjglVersion")
+		implementation "org.lwjgl:lwjgl"
+		implementation "org.lwjgl:lwjgl-vma"
+		implementation "org.lwjgl:lwjgl-vulkan"
+		implementation "org.lwjgl:lwjgl-glfw"
+
+		for (natives in project.ext.lwjglNatives) {
+			runtimeOnly "org.lwjgl:lwjgl::$natives"
+			runtimeOnly "org.lwjgl:lwjgl-glfw::$natives"
+			runtimeOnly "org.lwjgl:lwjgl-vma::$natives"
+			if (natives == "natives-macos") runtimeOnly "org.lwjgl:lwjgl-vulkan::$natives"
+		}
 	}
 }
